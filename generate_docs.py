@@ -16,12 +16,6 @@ directories = [
 
 output_file = os.path.join(root_dir, 'operations.md')
 
-mermaid_template = """```mermaid
-graph TD
-    A[Start Operation] --> B[Execute %s]
-    B --> C[End Operation]
-```"""
-
 with open(output_file, 'w') as f:
     f.write("# Java Operations Documentation\n\n")
     
@@ -35,21 +29,27 @@ with open(output_file, 'w') as f:
                 if file.endswith('.java'):
                     filepath = os.path.join(root, file)
                     rel_path = os.path.relpath(filepath, root_dir)
+                    class_name = file.split('.')[0]
                     
                     # Read file and extract methods
                     with open(filepath, 'r') as jf:
                         content = jf.read()
                         
-                    # Find simple method signatures: public/private/protected [static] returnType methodName(...)
                     methods = re.findall(r'(?:public|private|protected)\s+(?:static\s+)?(?:[\w<>,\[\]]+\s+)+(\w+)\s*\(', content)
-                    methods = [m for m in set(methods) if m != 'main' and m != file.split('.')[0]]
+                    methods = [m for m in set(methods) if m != 'main' and m != class_name]
                     
                     if methods:
                         f.write(f"@[{root_dir}]\n\n")
                         f.write(f"### {rel_path}\n\n")
+                        
+                        f.write("```mermaid\n")
+                        f.write("classDiagram\n")
+                        f.write(f"    class {class_name} {{\n")
+                        
                         for m in methods:
-                            f.write(f"#### Operation: `{m}`\n\n")
-                            f.write(mermaid_template % m)
-                            f.write("\n\n")
+                            f.write(f"        +{m}()\n")
+                            
+                        f.write("    }\n")
+                        f.write("```\n\n")
 
-print("Generated operations.md")
+print("Generated operations.md with classDiagrams")
